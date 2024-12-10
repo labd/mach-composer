@@ -7,20 +7,45 @@ import (
 	"github.com/mach-composer/mach-composer-cli/internal/config"
 )
 
+type options struct {
+	siteTarget string
+}
+
+type Option func(o *options)
+
+func WithTargetSiteName(site string) Option {
+	return func(o *options) {
+		o.siteTarget = site
+	}
+}
+
 // ToDeploymentGraph converts a MachConfig to a Graph ready for deployment.
 // This means that all nodes that are not independently deployable are pruned from the graph.
-func ToDeploymentGraph(cfg *config.MachConfig, outPath string) (*Graph, error) {
+func ToDeploymentGraph(cfg *config.MachConfig, outPath string, opts ...Option) (*Graph, error) {
+	o := options{
+		siteTarget: "",
+	}
+
+	for _, opt := range opts {
+		opt(&o)
+	}
+
 	g, err := ToDependencyGraph(cfg, outPath)
 	if err != nil {
 		return nil, err
 	}
 
-	if err = validateDeployment(g); err != nil {
+	if err := validateDeployment(g); err != nil {
 		return nil, err
 	}
 
 	// Remove all nodes that are not independent to site node
-	if err = reduceNodes(g); err != nil {
+	if err := reduceNodes(g); err != nil {
+		return nil, err
+	}
+
+	//Prune to only include the site node if provided
+	if err := targetSiteNode(g, o.siteTarget); err != nil {
 		return nil, err
 	}
 
@@ -131,4 +156,35 @@ func reduceNodes(g *Graph) error {
 	}
 
 	return pErr
+}
+
+func targetSiteNode(g *Graph, site string) error {
+	if site == "" {
+		return nil
+	}
+
+	if !g.VertexExists(site) {
+		return fmt.Errorf("site node %s does not exist", site)
+	}
+
+	for _, v := range g.VerticesByType(SiteType) {
+		if v.Identifier() != site {
+			var pErr error
+			_ = graph.DFS(g.Graph, v.Path(), func(p string) bool {
+				n, err := g.Graph.Vertex(p)
+				if err != nil {
+					pErr = err
+					return true
+				}
+
+				n.SetTargeted(false)
+
+				return false
+			})
+
+			return pErr
+		}
+	}
+
+	return nil
 }

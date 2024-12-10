@@ -34,8 +34,11 @@ type Node interface {
 	//Independent returns true if the node can be deployed independently, false otherwise
 	Independent() bool
 
-	//Tainted indicates if.
+	//Tainted indicates if the node has been changed since the last deployment
 	Tainted() bool
+
+	//Targeted indicates if the node should be deployed
+	Targeted() bool
 
 	//Hash returns the hash of the node. The hash is based on the node's configuration as well as the configuration of any
 	//related components. This can be compared to other hashes to determine whether a node has changed
@@ -43,6 +46,9 @@ type Node interface {
 
 	//SetTainted sets the tainted status of the node
 	SetTainted(tainted bool)
+
+	//SetTargeted sets the target status of the node. If the node is a target it will be deployed
+	SetTargeted(target bool)
 
 	//ResetGraph resets the graph of the node. If the graph the node belongs to the node graphs must also be reset,
 	//as these are used to determine the parents of the node
@@ -63,10 +69,11 @@ type baseNode struct {
 	ancestor       Node
 	deploymentType config.DeploymentType
 	tainted        bool
+	targeted       bool
 	oldHash        string
 }
 
-func newBaseNode(graph graph.Graph[string, Node], path string, identifier string, typ Type, ancestor Node, deploymentType config.DeploymentType) baseNode {
+func newBaseNode(graph graph.Graph[string, Node], path string, identifier string, typ Type, ancestor Node, deploymentType config.DeploymentType, targeted bool) baseNode {
 	return baseNode{graph: graph,
 		path:           path,
 		identifier:     identifier,
@@ -74,6 +81,7 @@ func newBaseNode(graph graph.Graph[string, Node], path string, identifier string
 		ancestor:       ancestor,
 		deploymentType: deploymentType,
 		tainted:        false,
+		targeted:       targeted,
 	}
 }
 
@@ -87,6 +95,14 @@ func (n *baseNode) SetTainted(tainted bool) {
 
 func (n *baseNode) Tainted() bool {
 	return n.tainted
+}
+
+func (n *baseNode) SetTargeted(ignored bool) {
+	n.targeted = ignored
+}
+
+func (n *baseNode) Targeted() bool {
+	return n.targeted
 }
 
 func (n *baseNode) Path() string {

@@ -15,14 +15,17 @@ mach-composer update [flags]
   -m, --commit-message string   Use a custom message for the commit.
       --component stringArray   
   -f, --file string             YAML file to update. (default "main.yml")
+      --git-fallback            Fallback to git if composer cloud check fails.
   -h, --help                    help for update
 ```
 
 ### Options inherited from parent commands
 
 ```
-  -q, --quiet     Quiet output. This is equal to setting log levels to error and higher
-  -v, --verbose   Verbose output. This is equal to setting log levels to debug and higher
+  -g, --github          Whether logs should be decorated with github-specific formatting
+      --output string   The output type. One of: console, json (default "console")
+  -q, --quiet           Quiet output. This is equal to setting log levels to error and higher
+  -v, --verbose         Verbose output. This is equal to setting log levels to debug and higher
 ```
 
 ### SEE ALSO
