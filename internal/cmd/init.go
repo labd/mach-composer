@@ -11,6 +11,10 @@ import (
 	"github.com/mach-composer/mach-composer-cli/internal/runner"
 )
 
+var initFlags struct {
+	site string
+}
+
 var initCmd = &cobra.Command{
 	Use:   "init",
 	Short: "Initialize site directories Terraform files.",
@@ -28,6 +32,7 @@ var initCmd = &cobra.Command{
 
 func init() {
 	registerCommonFlags(initCmd)
+	initCmd.Flags().StringVarP(&initFlags.site, "site", "s", "", "Site to parse. If not set parse all sites.")
 }
 
 func initFunc(cmd *cobra.Command, _ []string) error {
@@ -35,7 +40,7 @@ func initFunc(cmd *cobra.Command, _ []string) error {
 	defer cfg.Close()
 	ctx := cmd.Context()
 
-	dg, err := graph.ToDeploymentGraph(cfg, commonFlags.outputPath)
+	dg, err := graph.ToDeploymentGraph(cfg, commonFlags.outputPath, graph.WithTargetSiteName(initFlags.site))
 	if err != nil {
 		return err
 	}
