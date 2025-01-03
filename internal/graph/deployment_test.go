@@ -89,3 +89,154 @@ func TestToDeploymentGraphSimple(t *testing.T) {
 		"main/site-1/site-component-2": {},
 	}, am)
 }
+
+func TestTargetSiteNodeDoesNotExist(t *testing.T) {
+	cfg := &config.MachConfig{
+		Filename: "main",
+		MachComposer: config.MachComposer{
+			Deployment: config.Deployment{
+				Type: config.DeploymentSite,
+			},
+		},
+
+		Sites: []config.SiteConfig{
+			{
+				Name: "site 1",
+				Deployment: &config.Deployment{
+					Type: config.DeploymentSite,
+				},
+				Identifier: "site-1",
+				Components: []config.SiteComponentConfig{
+					{
+						Name: "site-component-1",
+						Deployment: &config.Deployment{
+							Type: config.DeploymentSite,
+						},
+					},
+				},
+			},
+		},
+	}
+
+	g, err := ToDeploymentGraph(cfg, "")
+	assert.NoError(t, err)
+
+	err = targetSiteNode(g, "site-2")
+	assert.ErrorContains(t, err, "site-2 does not exist")
+}
+
+func TestTargetSiteNodeAll(t *testing.T) {
+	cfg := &config.MachConfig{
+		Filename: "main",
+		MachComposer: config.MachComposer{
+			Deployment: config.Deployment{
+				Type: config.DeploymentSite,
+			},
+		},
+
+		Sites: []config.SiteConfig{
+			{
+				Name: "site 1",
+				Deployment: &config.Deployment{
+					Type: config.DeploymentSite,
+				},
+				Identifier: "site-1",
+				Components: []config.SiteComponentConfig{
+					{
+						Name: "site-component-1",
+						Deployment: &config.Deployment{
+							Type: config.DeploymentSite,
+						},
+					},
+				},
+			},
+			{
+				Name: "site 2",
+				Deployment: &config.Deployment{
+					Type: config.DeploymentSite,
+				},
+				Identifier: "site-2",
+				Components: []config.SiteComponentConfig{
+					{
+						Name: "site-component-1",
+						Deployment: &config.Deployment{
+							Type: config.DeploymentSite,
+						},
+					},
+				},
+			},
+		},
+	}
+
+	g, err := ToDeploymentGraph(cfg, "")
+	assert.NoError(t, err)
+
+	err = targetSiteNode(g, "")
+	assert.NoError(t, err)
+
+	var siteVertices = g.VerticesByType(SiteType)
+	assert.Len(t, siteVertices, 2)
+
+	for _, v := range siteVertices {
+		assert.True(t, v.Targeted())
+	}
+}
+
+func TestTargetSiteNodeTargeted(t *testing.T) {
+	cfg := &config.MachConfig{
+		Filename: "main",
+		MachComposer: config.MachComposer{
+			Deployment: config.Deployment{
+				Type: config.DeploymentSite,
+			},
+		},
+
+		Sites: []config.SiteConfig{
+			{
+				Name: "site 1",
+				Deployment: &config.Deployment{
+					Type: config.DeploymentSite,
+				},
+				Identifier: "site-1",
+				Components: []config.SiteComponentConfig{
+					{
+						Name: "site-component-1",
+						Deployment: &config.Deployment{
+							Type: config.DeploymentSite,
+						},
+					},
+				},
+			},
+			{
+				Name: "site 2",
+				Deployment: &config.Deployment{
+					Type: config.DeploymentSite,
+				},
+				Identifier: "site-2",
+				Components: []config.SiteComponentConfig{
+					{
+						Name: "site-component-1",
+						Deployment: &config.Deployment{
+							Type: config.DeploymentSite,
+						},
+					},
+				},
+			},
+		},
+	}
+
+	g, err := ToDeploymentGraph(cfg, "")
+	assert.NoError(t, err)
+
+	err = targetSiteNode(g, "site-1")
+	assert.NoError(t, err)
+
+	var siteVertices = g.VerticesByType(SiteType)
+	assert.Len(t, siteVertices, 2)
+
+	site1 := g.VertexByIdentifier("site-1")
+	assert.True(t, site1.Targeted())
+
+	site2 := g.VertexByIdentifier("site-2")
+	assert.False(t, site2.Targeted())
+}

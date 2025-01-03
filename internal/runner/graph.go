@@ -77,6 +77,11 @@ func (gr *GraphRunner) run(ctx context.Context, g *graph.Graph, f executorFunc, 
 				continue
 			}
 
+			if n.Targeted() == false {
+				log.Info().Msgf("Skipping %s because it is not targeted", n.Identifier())
+				continue
+			}
+
 			if err := sem.Acquire(ctx, 1); err != nil {
 				return err
 			}

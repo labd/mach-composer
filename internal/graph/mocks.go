@@ -33,8 +33,9 @@ func CreateGraphMock(
 
 type NodeMock struct {
 	mock.Mock
-	tainted bool
-	oldHash string
+	tainted  bool
+	targeted bool
+	oldHash  string
 }
 
 func (n *NodeMock) SetOldHash(hash string) {
@@ -79,6 +80,11 @@ func (n *NodeMock) Tainted() bool {
 	return n.tainted
 }
 
+func (n *NodeMock) Targeted() bool {
+	args := n.Called()
+	return args.Bool(0)
+}
+
 func (n *NodeMock) Hash() (string, error) {
 	args := n.Called()
 	return args.String(0), args.Error(1)
@@ -86,6 +92,10 @@ func (n *NodeMock) Hash() (string, error) {
 
 func (n *NodeMock) SetTainted(tainted bool) {
 	n.tainted = tainted
+}
+
+func (n *NodeMock) SetTargeted(targeted bool) {
+	n.targeted = targeted
 }
 
 func (n *NodeMock) HasChanges() (bool, error) {

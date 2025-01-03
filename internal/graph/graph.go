@@ -28,6 +28,32 @@ func (g *Graph) Vertices() Vertices {
 	return vertices
 }
 
+func (g *Graph) VerticesByType(typ Type) Vertices {
+	v := g.Vertices()
+	var vertices Vertices
+
+	for _, node := range v {
+		if node.Type() == typ {
+			vertices = append(vertices, node)
+		}
+	}
+
+	return vertices
+}
+
+func (g *Graph) VertexByIdentifier(identifier string) Node {
+	for _, v := range g.Vertices() {
+		if v.Identifier() == identifier {
+			return v
+		}
+	}
+	return nil
+}
+
+func (g *Graph) VertexExists(identifier string) bool {
+	return g.VertexByIdentifier(identifier) != nil
+}
+
 // Routes determines all the possible paths between two nodes
 func (g *Graph) Routes(source, target string) ([]Path, error) {
 	var routes []Path

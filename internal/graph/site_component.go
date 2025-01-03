@@ -18,7 +18,7 @@ func NewSiteComponent(
 	ancestor Node, projectConfig config.MachConfig, siteConfig config.SiteConfig, siteComponentConfig config.SiteComponentConfig,
 ) *SiteComponent {
 	return &SiteComponent{
-		baseNode:            newBaseNode(g, path, identifier, SiteComponentType, ancestor, deploymentType),
+		baseNode:            newBaseNode(g, path, identifier, SiteComponentType, ancestor, deploymentType, true),
 		ProjectConfig:       projectConfig,
 		SiteConfig:          siteConfig,
 		SiteComponentConfig: siteComponentConfig,

@@ -16,6 +16,7 @@ var applyFlags struct {
 	autoApprove           bool
 	destroy               bool
 	components            []string
+	site                  string
 	numWorkers            int
 	ignoreChangeDetection bool
 }
@@ -37,6 +38,7 @@ func init() {
 	applyCmd.Flags().BoolVarP(&applyFlags.forceInit, "force-init", "", false, "Force terraform initialization. By default mach-composer will reuse existing terraform resources")
 	applyCmd.Flags().BoolVarP(&applyFlags.autoApprove, "auto-approve", "", false, "Suppress a terraform init for improved speed (not recommended for production usage)")
 	applyCmd.Flags().BoolVarP(&applyFlags.destroy, "destroy", "", false, "Destroy option is a convenient way to destroy all remote objects managed by this mach config")
+	applyCmd.Flags().StringVarP(&applyFlags.site, "site", "s", "", "Site to parse. If not set parse all sites.")
 	applyCmd.Flags().StringArrayVarP(&applyFlags.components, "component", "c", nil, "")
 	applyCmd.Flags().BoolVarP(&applyFlags.ignoreChangeDetection, "ignore-change-detection", "", false, "Ignore change detection to run even if the components are considered up to date")
 }
@@ -50,7 +52,7 @@ func applyFunc(cmd *cobra.Command, _ []string) error {
 	defer cfg.Close()
 	ctx := cmd.Context()
 
-	dg, err := graph.ToDeploymentGraph(cfg, commonFlags.outputPath)
+	dg, err := graph.ToDeploymentGraph(cfg, commonFlags.outputPath, graph.WithTargetSiteName(applyFlags.site))
 	if err != nil {
 		return err
 	}

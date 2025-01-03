@@ -17,7 +17,7 @@ func NewSite(g graph.Graph[string, Node], path, identifier string,
 	deploymentType config.DeploymentType, ancestor Node,
 	projectConfig config.MachConfig, siteConfig config.SiteConfig) *Site {
 	return &Site{
-		baseNode:      newBaseNode(g, path, identifier, SiteType, ancestor, deploymentType),
+		baseNode:      newBaseNode(g, path, identifier, SiteType, ancestor, deploymentType, true),
 		ProjectConfig: projectConfig,
 		SiteConfig:    siteConfig,
 	}

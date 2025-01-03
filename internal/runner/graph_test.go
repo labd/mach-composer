@@ -23,24 +23,28 @@ func TestGraphRunnerMultipleLevels(t *testing.T) {
 	site.On("Path").Return("site-1")
 	site.On("Hash").Return("site-1", nil)
 	site.On("Type").Return(internalgraph.SiteType)
+	site.On("Targeted").Return(true)
 
 	component1 := new(internalgraph.NodeMock)
 	component1.On("Identifier").Return("component-1")
 	component1.On("Path").Return("component-1")
 	component1.On("Hash").Return("component-1", nil)
 	component1.On("Type").Return(internalgraph.SiteComponentType)
+	component1.On("Targeted").Return(true)
 
 	component2 := new(internalgraph.NodeMock)
 	component2.On("Identifier").Return("component-2")
 	component2.On("Path").Return("component-2")
 	component2.On("Hash").Return("component-2", nil)
 	component2.On("Type").Return(internalgraph.SiteComponentType)
+	component2.On("Targeted").Return(true)
 
 	component3 := new(internalgraph.NodeMock)
 	component3.On("Identifier").Return("component-3")
 	component3.On("Path").Return("component-3")
 	component3.On("Hash").Return("component-3", nil)
 	component3.On("Type").Return(internalgraph.SiteComponentType)
+	component3.On("Targeted").Return(true)
 
 	graph := internalgraph.CreateGraphMock(
 		map[string]internalgraph.Node{
@@ -76,6 +80,44 @@ func TestGraphRunnerMultipleLevels(t *testing.T) {
 	assert.Equal(t, []string{"component-2", "component-3"}, called)
 }
 
+func TestGraphRunnerTargeted(t *testing.T) {
+	project := new(internalgraph.NodeMock)
+	project.On("Identifier").Return("main")
+	project.On("Path").Return("main")
+	project.On("Hash").Return("main", nil)
+	project.On("Type").Return(internalgraph.ProjectType)
+
+	site := new(internalgraph.NodeMock)
+	site.On("Identifier").Return("site-1")
+	site.On("Path").Return("site-1")
+	site.On("Hash").Return("site-1", nil)
+	site.On("Type").Return(internalgraph.SiteType)
+	site.On("Targeted").Return(false)
+
+	graph := internalgraph.CreateGraphMock(
+		map[string]internalgraph.Node{
+			"main":   project,
+			"site-1": site,
+		},
+		project,
+		internalgraph.EdgeMock{Source: "main", Target: "site-1"},
+	)
+
+	runner := GraphRunner{workers: 1}
+	runner.hash = hash.NewMemoryMapHandler()
+	runner.batch = batcher.NaiveBatchFunc()
+
+	var called []string
+
+	err := runner.run(context.Background(), graph, func(ctx context.Context, node internalgraph.Node) error {
+		called = append(called, node.Identifier())
+		return nil
+	}, false)
+
+	assert.NoError(t, err)
+	assert.Len(t, called, 0)
+}
+
 func TestGraphRunnerError(t *testing.T) {
 	project := new(internalgraph.NodeMock)
 	project.On("Identifier").Return("main")
@@ -88,24 +130,28 @@ func TestGraphRunnerError(t *testing.T) {
 	site.On("Path").Return("site-1")
 	site.On("Hash").Return("site-1", nil)
 	site.On("Type").Return(internalgraph.SiteType)
+	site.On("Targeted").Return(true)
 
 	component1 := new(internalgraph.NodeMock)
 	component1.On("Identifier").Return("component-1")
 	component1.On("Path").Return("component-1")
 	component1.On("Hash").Return("component-1", nil)
 	component1.On("Type").Return(internalgraph.SiteComponentType)
+	component1.On("Targeted").Return(true)
 
 	component2 := new(internalgraph.NodeMock)
 	component2.On("Identifier").Return("component-2")
 	component2.On("Path").Return("component-2")
 	component2.On("Hash").Return("component-2", nil)
 	component2.On("Type").Return(internalgraph.SiteComponentType)
+	component2.On("Targeted").Return(true)
 
 	component3 := new(internalgraph.NodeMock)
 	component3.On("Identifier").Return("component-3")
 	component3.On("Path").Return("component-3")
 	component3.On("Hash").Return("component-3", nil)
 	component3.On("Type").Return(internalgraph.SiteComponentType)
+	component3.On("Targeted").Return(true)
 
 	graph := internalgraph.CreateGraphMock(
 		map[string]internalgraph.Node{

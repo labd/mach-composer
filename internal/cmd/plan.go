@@ -13,6 +13,7 @@ import (
 
 var planFlags struct {
 	forceInit             bool
+	site                  string
 	components            []string
 	lock                  bool
 	ignoreChangeDetection bool
@@ -33,6 +34,7 @@ var planCmd = &cobra.Command{
 func init() {
 	registerCommonFlags(planCmd)
 	planCmd.Flags().BoolVarP(&planFlags.forceInit, "force-init", "", false, "Force terraform initialization. By default mach-composer will reuse existing terraform resources")
+	planCmd.Flags().StringVarP(&planFlags.site, "site", "s", "", "Site to parse. If not set parse all sites.")
 	planCmd.Flags().StringArrayVarP(&planFlags.components, "component", "c", nil, "")
 	planCmd.Flags().BoolVarP(&planFlags.lock, "lock", "", true, "Acquire a lock on the state file before running terraform plan")
 	planCmd.Flags().BoolVarP(&planFlags.ignoreChangeDetection, "ignore-change-detection", "", false, "Ignore change detection to run even if the components are considered up to date")
@@ -47,7 +49,7 @@ func planFunc(cmd *cobra.Command, _ []string) error {
 	defer cfg.Close()
 	ctx := cmd.Context()
 
-	dg, err := graph.ToDeploymentGraph(cfg, commonFlags.outputPath)
+	dg, err := graph.ToDeploymentGraph(cfg, commonFlags.outputPath, graph.WithTargetSiteName(planFlags.site))
 	if err != nil {
 		return err
 	}

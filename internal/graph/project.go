@@ -13,7 +13,7 @@ type Project struct {
 func NewProject(g graph.Graph[string, Node], path, identifier string, deploymentType config.DeploymentType,
 	projectConfig config.MachConfig) *Project {
 	return &Project{
-		baseNode:      newBaseNode(g, path, identifier, ProjectType, nil, deploymentType),
+		baseNode:      newBaseNode(g, path, identifier, ProjectType, nil, deploymentType, false),
 		ProjectConfig: projectConfig,
 	}
 }

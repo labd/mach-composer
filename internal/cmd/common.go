@@ -17,7 +17,6 @@ import (
 
 type CommonFlags struct {
 	configFile    string
-	siteName      string
 	ignoreVersion bool
 	outputPath    string
 	varFile       string
@@ -29,9 +28,8 @@ var commonFlags CommonFlags
 func registerCommonFlags(cmd *cobra.Command) {
 	cmd.Flags().StringVarP(&commonFlags.configFile, "file", "f", "main.yml", "YAML file to parse.")
 	cmd.Flags().StringVarP(&commonFlags.varFile, "var-file", "", "", "Use a variable file to parse the configuration with.")
-	cmd.Flags().StringVarP(&commonFlags.siteName, "site", "s", "", "Site to parse. If not set parse all sites.")
 	cmd.Flags().BoolVarP(&commonFlags.ignoreVersion, "ignore-version", "", false, "Skip MACH composer version check")
-	cmd.Flags().StringVarP(&commonFlags.outputPath, "output-path", "", "deployments",
+	cmd.Flags().StringVarP(&commonFlags.outputPath, "output-path", "o", "deployments",
 		"Outputs path to store the generated files.")
 	cmd.Flags().IntVarP(&commonFlags.workers, "workers", "w", 1, "The number of workers to use")
 
@@ -39,10 +37,6 @@ func registerCommonFlags(cmd *cobra.Command) {
 }
 
 func preprocessCommonFlags(cmd *cobra.Command) {
-	if commonFlags.siteName != "" {
-		log.Warn().Msgf("Site option not implemented")
-	}
-
 	handleError(cmd.MarkFlagFilename("var-file", "yml", "yaml"))
 	handleError(cmd.MarkFlagFilename("file", "yml", "yaml"))
 
