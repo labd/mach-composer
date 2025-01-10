@@ -1,0 +1,3 @@
+kind: Fixed
+body: Added sorting of remote state identifiers before compacting
+time: 2025-01-10T14:46:20.251554084+01:00

@@ -6,6 +6,7 @@ import (
 	"github.com/mach-composer/mach-composer-cli/internal/config"
 	"github.com/mach-composer/mach-composer-cli/internal/config/variable"
 	"github.com/mach-composer/mach-composer-cli/internal/graph"
+	"github.com/mach-composer/mach-composer-cli/internal/state"
 	"github.com/mach-composer/mach-composer-cli/internal/utils"
 	"runtime"
 	"slices"
@@ -56,7 +57,7 @@ func renderSiteComponent(ctx context.Context, cfg *config.MachConfig, n *graph.S
 	result = append(result, val)
 
 	// Render data links to other deployments
-	val, err = renderRemoteSources(cfg, n)
+	val, err = renderRemoteSources(cfg.StateRepository, n.SiteConfig.Identifier, n.SiteComponentConfig)
 	if err != nil {
 		return "", fmt.Errorf("failed to render remote sources: %w", err)
 	}
@@ -220,37 +221,36 @@ func renderComponentModule(_ context.Context, cfg *config.MachConfig, n *graph.S
 }
 
 // renderRemoteSources uses the state repository to generate a terraform remote_state snippet for each referenced component
-func renderRemoteSources(cfg *config.MachConfig, n *graph.SiteComponent) (string, error) {
-	siteComponentConfig := n.SiteComponentConfig
-	siteConfig := n.SiteConfig
-
+func renderRemoteSources(r *state.Repository, si string, scc config.SiteComponentConfig) (string, error) {
 	parents := append(
-		siteComponentConfig.Variables.ListReferencedComponents(),
-		siteComponentConfig.Secrets.ListReferencedComponents()...,
+		scc.Variables.ListReferencedComponents(),
+		scc.Secrets.ListReferencedComponents()...,
 	)
 
 	var links []string
 	for _, parent := range parents {
-		key, ok := cfg.StateRepository.StateKey(graph.CreateIdentifier(siteConfig.Identifier, parent))
+		key, ok := r.StateKey(graph.CreateIdentifier(si, parent))
 		if !ok {
 			return "", fmt.Errorf("missing remote state for %s", parent)
 		}
 		links = append(links, key)
 	}
 
+	// Sort and compact the links
+	slices.Sort(links)
 	links = slices.Compact(links)
 
 	var result []string
 
 	for _, link := range links {
 		var linkIdentifier string
-		if siteConfig.Identifier == link {
+		if si == link {
 			linkIdentifier = link
 		} else {
-			linkIdentifier = graph.CreateIdentifier(siteConfig.Identifier, link)
+			linkIdentifier = graph.CreateIdentifier(si, link)
 		}
 
-		s, ok := cfg.StateRepository.Get(linkIdentifier)
+		s, ok := r.Get(linkIdentifier)
 		if !ok {
 			return "", fmt.Errorf("state repository does not have a backend for %s", link)
 		}
